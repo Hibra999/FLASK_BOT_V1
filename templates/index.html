@@ -1,0 +1,1913 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bot de Trading de Criptomonedas</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+    <!-- ApexCharts -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/apexcharts@3.35.3/dist/apexcharts.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        :root {
+            --primary-color: #ff445d;
+            --secondary-color: #2d3748;
+            --dark-color: #1a202c;
+            --light-color: #edf2f7;
+            --success-color: #38a169;
+            --warning-color: #d69e2e;
+            --danger-color: #e53e3e;
+        }
+        
+        body {
+            background-color: #131722;
+            color: var(--light-color);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+        
+        .navbar {
+            background-color: var(--dark-color);
+            border-bottom: 1px solid #2d3748;
+        }
+        
+        .card {
+            background-color: var(--secondary-color);
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        
+        .card-header {
+            background-color: rgba(0, 0, 0, 0.2);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            font-weight: 600;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .btn-primary:hover {
+            background-color: #ff2c49;
+            border-color: #ff2c49;
+        }
+        
+        .btn-outline-primary {
+            color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .btn-outline-primary:hover {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .form-control, .form-select {
+            background-color: var(--dark-color);
+            border: 1px solid #4a5568;
+            color: var(--light-color);
+        }
+        
+        .form-control:focus, .form-select:focus {
+            background-color: var(--dark-color);
+            color: var(--light-color);
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.25rem rgba(255, 68, 93, 0.25);
+        }
+        
+        .form-select option {
+            background-color: var(--dark-color);
+            color: var(--light-color);
+        }
+        
+        .alert-success {
+            background-color: rgba(56, 161, 105, 0.2);
+            border-color: var(--success-color);
+            color: #9ae6b4;
+        }
+        
+        .alert-danger {
+            background-color: rgba(229, 62, 62, 0.2);
+            border-color: var(--danger-color);
+            color: #feb2b2;
+        }
+        
+        .alert-warning {
+            background-color: rgba(214, 158, 46, 0.2);
+            border-color: var(--warning-color);
+            color: #fbd38d;
+        }
+        
+        .table {
+            color: var(--light-color);
+            border-color: #4a5568;
+        }
+        
+        .table-dark {
+            background-color: var(--secondary-color);
+        }
+        
+        .table-striped>tbody>tr:nth-of-type(odd)>* {
+            background-color: rgba(0, 0, 0, 0.1);
+            color: var(--light-color);
+        }
+        
+        .crypto-symbol {
+            font-size: 2rem;
+            margin-right: 15px;
+        }
+        
+        .price-display {
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+        
+        .trend-up {
+            color: #38a169;
+        }
+        
+        .trend-down {
+            color: #e53e3e;
+        }
+        
+        .trend-neutral {
+            color: #d69e2e;
+        }
+        
+        .stats-card {
+            transition: transform 0.3s ease;
+        }
+        
+        .stats-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stats-icon {
+            font-size: 1.8rem;
+            margin-right: 10px;
+        }
+        
+        #chartContainer {
+            height: 400px;
+            width: 100%;
+        }
+        
+        .mode-toggle {
+            display: flex;
+            align-items: center;
+        }
+        
+        .toggle-label {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+            margin: 0 10px;
+        }
+        
+        .toggle-label input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .toggle-slider {
+            background-color: var(--primary-color);
+        }
+        
+        input:focus + .toggle-slider {
+            box-shadow: 0 0 1px var(--primary-color);
+        }
+        
+        input:checked + .toggle-slider:before {
+            transform: translateX(26px);
+        }
+        
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            visibility: hidden;
+            opacity: 0;
+            transition: visibility 0s, opacity 0.3s;
+        }
+        
+        .loading-overlay.show {
+            visibility: visible;
+            opacity: 1;
+        }
+        
+        .decision-box {
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+            background-color: rgba(0, 0, 0, 0.2);
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        /* Estilos para el selector de pestañas */
+        .nav-tabs {
+            border-bottom: 1px solid #4a5568;
+        }
+        
+        .nav-tabs .nav-link {
+            border: none;
+            color: #a0aec0;
+            padding: 10px 20px;
+            border-radius: 0;
+            margin-right: 5px;
+        }
+        
+        .nav-tabs .nav-link:hover {
+            border-color: transparent;
+            color: var(--light-color);
+        }
+        
+        .nav-tabs .nav-link.active {
+            color: var(--primary-color);
+            background-color: transparent;
+            border-bottom: 2px solid var(--primary-color);
+        }
+        
+        /* Estilos para el badge de Telegram */
+        .telegram-badge {
+            position: relative;
+            top: -2px;
+            font-size: 0.7em;
+            padding: 3px 6px;
+            margin-left: 5px;
+            border-radius: 10px;
+        }
+        
+        /* Nuevas tarjetas para API y Telegram */
+        .api-card {
+            transition: all 0.3s ease;
+        }
+        
+        .api-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .api-key-field {
+            position: relative;
+        }
+        
+        .api-key-field .toggle-visibility {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #a0aec0;
+            cursor: pointer;
+        }
+        
+        .currency-item {
+            border-left: 3px solid transparent;
+            transition: all 0.2s ease;
+        }
+        
+        .currency-item:hover {
+            border-left-color: var(--primary-color);
+            background-color: rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Nuevos estilos para la tabla de operaciones */
+        .profit-positive {
+            color: #38a169;
+            font-weight: bold;
+        }
+        
+        .profit-negative {
+            color: #e53e3e;
+            font-weight: bold;
+        }
+        
+        .badge {
+            font-size: 0.75rem;
+            padding: 0.35em 0.65em;
+            border-radius: 0.4rem;
+        }
+        
+        .operations-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+            padding: 8px 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        /* Estilos para notificaciones toast */
+        .toast-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 9999;
+        }
+        
+        .toast {
+            margin-bottom: 10px;
+            background-color: var(--secondary-color);
+            border-left: 4px solid var(--primary-color);
+            color: var(--light-color);
+            padding: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+        }
+        
+        /* Indicadores de estado del bot */
+        .bot-status-badge {
+            padding: 8px 12px;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            display: inline-flex;
+            align-items: center;
+            margin-left: 10px;
+        }
+        
+        .bot-status-badge i {
+            margin-right: 5px;
+        }
+        
+        .bot-status-running {
+            background-color: rgba(56, 161, 105, 0.2);
+            color: #9ae6b4;
+            border: 1px solid rgba(56, 161, 105, 0.5);
+        }
+        
+        .bot-status-stopped {
+            background-color: rgba(229, 62, 62, 0.2);
+            color: #feb2b2;
+            border: 1px solid rgba(229, 62, 62, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+            <span class="visually-hidden">Cargando...</span>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="#">
+                <i class="fas fa-robot me-2"></i>
+                <span>Bot de Trading de Criptomonedas</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <div class="mode-toggle">
+                            <span>Simulación</span>
+                            <label class="toggle-label">
+                                <input type="checkbox" id="modeToggle">
+                                <span class="toggle-slider"></span>
+                            </label>
+                            <span>Real</span>
+                        </div>
+                    </li>
+                    <li class="nav-item ms-3">
+                        <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="modal" data-bs-target="#settingsModal">
+                            <i class="fas fa-cog me-1"></i> Configuración
+                        </button>
+                    </li>
+                    <!-- Los botones de control del bot se añadirán aquí mediante JavaScript -->
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container mt-4">
+        <div class="row">
+            <!-- Left Column: Token Info & Chart -->
+            <div class="col-lg-8">
+                <!-- Token Header -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center">
+                                <i class="fab fa-bitcoin crypto-symbol"></i>
+                                <div>
+                                    <h2 id="tokenName">{{ status.current_token }}</h2>
+                                    <div class="price-display">
+                                        $<span id="currentPrice">{{ status.current_price|round(2) }}</span>
+                                    </div>
+                                    <div id="trendIndicator" class="fs-5 trend-up">
+                                        {% if status.trend == "Alta" %}
+                                        <i class="fas fa-arrow-up"></i> Tendencia: Alta
+                                        {% elif status.trend == "Baja" %}
+                                        <i class="fas fa-arrow-down"></i> Tendencia: Baja
+                                        {% else %}
+                                        <i class="fas fa-minus"></i> Tendencia: Neutral
+                                        {% endif %}
+                                    </div>
+                                    <!-- Telegram Status -->
+                                    <div class="mt-1">
+                                        <span id="telegramStatus" class="{% if status.telegram_enabled %}text-success{% else %}text-muted{% endif %}">
+                                            <i class="fab fa-telegram"></i> 
+                                            {% if status.telegram_enabled %}
+                                                <span class="badge bg-success telegram-badge">Conectado</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary telegram-badge">Desconectado</span>
+                                            {% endif %}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <span id="botStatusBadge" class="bot-status-badge bot-status-running">
+                                    <i class="fas fa-circle"></i> Bot Activo
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Decision Box -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <i class="fas fa-robot me-2"></i> Decisión del Bot
+                    </div>
+                    <div class="card-body">
+                        <div id="decisionBox" class="decision-box">
+                            <h5><i class="fas fa-lightbulb me-2"></i> <span id="decisionText">{{ status.decision }}</span></h5>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chart Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-chart-line me-2"></i> Gráfico de Precios
+                    </div>
+                    <div class="card-body">
+                        <div id="chartContainer"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Config & Stats -->
+            <div class="col-lg-4">
+                <!-- Config Card -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <i class="fas fa-cog me-2"></i> Configuración
+                    </div>
+                    <div class="card-body">
+                        <ul class="nav nav-tabs mb-3" id="configTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="trading-tab" data-bs-toggle="tab" data-bs-target="#trading-tab-pane" type="button" role="tab">
+                                    Trading
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="advanced-tab" data-bs-toggle="tab" data-bs-target="#advanced-tab-pane" type="button" role="tab">
+                                    Avanzado
+                                </button>
+                            </li>
+                        </ul>
+                        <div class="tab-content" id="configTabsContent">
+                            <!-- Basic Trading Tab -->
+                            <div class="tab-pane fade show active" id="trading-tab-pane" role="tabpanel" tabindex="0">
+                                <form id="configForm">
+                                    <div class="mb-3">
+                                        <label for="tokenSelect" class="form-label">Token</label>
+                                        <div class="input-group">
+                                            <select class="form-select" id="tokenSelect">
+                                                {% for token in tokens %}
+                                                <option value="{{ token }}" {% if token == status.current_token %}selected{% endif %}>{{ token }}</option>
+                                                {% endfor %}
+                                            </select>
+                                            <button class="btn btn-outline-primary" type="button" id="searchBtn">
+                                                <i class="fas fa-search"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="limitInput" class="form-label">Límite de Velas (max 25000)</label>
+                                        <input type="number" class="form-control" id="limitInput" value="500" min="50" max="25000">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="capitalInput" class="form-label">Capital Inicial (USD)</label>
+                                        <input type="number" class="form-control" id="capitalInput" value="2000" min="100">
+                                    </div>
+                                    <button type="submit" class="btn btn-primary w-100">
+                                        <i class="fas fa-play me-2"></i> Aplicar Configuración
+                                    </button>
+                                </form>
+                            </div>
+                            
+                            <!-- Advanced Tab -->
+                            <div class="tab-pane fade" id="advanced-tab-pane" role="tabpanel" tabindex="0">
+                                <div class="mb-3">
+                                    <div class="form-text mb-2 text-warning">
+                                        <i class="fas fa-info-circle"></i> Configuraciones adicionales disponibles en el menú principal
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Modo de Operación</label>
+                                    <div class="d-grid">
+                                        <button type="button" id="toggleModeBtn" class="btn btn-outline-primary">
+                                            <i class="fas fa-exchange-alt me-2"></i>
+                                            <span id="currentModeText">{{ 'Modo Simulación' if status.mode == 'Simulación' else 'Modo Real' }}</span>
+                                        </button>
+                                    </div>
+                                    <div class="form-text mt-2">
+                                        <small>El modo real requiere configurar claves API válidas</small>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Conexión Telegram</label>
+                                    <div class="d-grid">
+                                        <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#telegramModal">
+                                            <i class="fab fa-telegram me-2"></i> Configurar Telegram
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Claves API</label>
+                                    <div class="d-grid">
+                                        <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#apiKeysModal">
+                                            <i class="fas fa-key me-2"></i> Configurar API Keys
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stats Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-chart-pie me-2"></i> Estadísticas
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-12 mb-3">
+                                <div class="card stats-card">
+                                    <div class="card-body">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-wallet stats-icon"></i>
+                                            <div>
+                                                <h6>Saldo Total</h6>
+                                                <h5 id="saldoTotal">${{ status.saldo_total|round(2) }}</h5>
+                                                <small id="balanceMode" class="text-muted">
+                                                    {{ 'Simulación' if status.mode == 'Simulación' else 'Real' }}
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12 mb-3">
+                                <div class="card stats-card">
+                                    <div class="card-body">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-coins stats-icon"></i>
+                                            <div>
+                                                <h6>Monedas</h6>
+                                                <h5 id="saldoMonedas">{{ status.saldo_monedas|round(5) }}</h5>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <div class="card stats-card">
+                                    <div class="card-body p-3 text-center">
+                                        <i class="fas fa-trophy text-success mb-2"></i>
+                                        <h6>Victorias</h6>
+                                        <h5 id="wins">{{ status.wins }}</h5>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <div class="card stats-card">
+                                    <div class="card-body p-3 text-center">
+                                        <i class="fas fa-times text-danger mb-2"></i>
+                                        <h6>Derrotas</h6>
+                                        <h5 id="losses">{{ status.losses }}</h5>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="card stats-card">
+                                    <div class="card-body">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-clock stats-icon"></i>
+                                            <div>
+                                                <h6>Próxima Operación</h6>
+                                                <h5 id="nextOperation">Calculando...</h5>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Operations Table -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="fas fa-history me-2"></i> Historial de Operaciones
+                            </div>
+                            <div>
+                                <button class="btn btn-sm btn-outline-light" id="refreshOperationsBtn">
+                                    <i class="fas fa-sync-alt"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-dark table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Token</th>
+                                        <th>Operación</th>
+                                        <th>Precio</th>
+                                        <th>Cantidad</th>
+                                        <th>Beneficio</th>
+                                        <th>Estado</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="operationsTable">
+                                    <!-- Operations will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="operations-toolbar">
+                            <div>
+                                <span class="text-muted" id="operationsCount">0 operaciones</span>
+                            </div>
+                            <div>
+                                <button class="btn btn-sm btn-outline-primary" id="downloadOperationsBtn">
+                                    <i class="fas fa-download me-1"></i> Exportar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <!-- API Keys Modal -->
+    <div class="modal fade" id="apiKeysModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content bg-dark text-light">
+                <div class="modal-header">
+                    <h5 class="modal-title">Configurar Claves API</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="apiKeysForm">
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Las claves API son necesarias para operar en modo real.
+                        </div>
+                        <div class="mb-3">
+                            <label for="apiKey" class="form-label">API Key</label>
+                            <div class="api-key-field">
+                                <input type="password" class="form-control" id="apiKey" placeholder="Ingresa tu API Key">
+                                <button type="button" class="toggle-visibility">
+                                    <i class="far fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="apiSecret" class="form-label">API Secret</label>
+                            <div class="api-key-field">
+                                <input type="password" class="form-control" id="apiSecret" placeholder="Ingresa tu API Secret">
+                                <button type="button" class="toggle-visibility">
+                                    <i class="far fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i> Guardar Claves
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Telegram Modal -->
+    <div class="modal fade" id="telegramModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content bg-dark text-light">
+                <div class="modal-header">
+                    <h5 class="modal-title">Configurar Notificaciones Telegram</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="telegramForm">
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="telegramEnabled">
+                                <label class="form-check-label" for="telegramEnabled">Habilitar notificaciones</label>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="telegramToken" class="form-label">Token del Bot</label>
+                            <input type="text" class="form-control" id="telegramToken" placeholder="123456789:ABCDefGhIJKlmNoPQRsTUVwxyZ">
+                            <div class="form-text">
+                                <small>Obtén tu token creando un bot con @BotFather en Telegram</small>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="telegramChatId" class="form-label">Chat ID</label>
+                            <input type="text" class="form-control" id="telegramChatId" placeholder="-100123456789">
+                            <div class="form-text">
+                                <small>ID del chat donde se enviarán las notificaciones</small>
+                            </div>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fab fa-telegram me-2"></i> Guardar Configuración
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <div class="w-100 text-center">
+                        <a href="https://core.telegram.org/bots/tutorial" target="_blank" class="text-info">
+                            <i class="fas fa-question-circle me-1"></i> Cómo crear un bot en Telegram
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Modal -->
+    <div class="modal fade" id="searchModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content bg-dark text-light">
+                <div class="modal-header">
+                    <h5 class="modal-title">Buscar Token</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <input type="text" class="form-control" id="searchInput" placeholder="Buscar token...">
+                    </div>
+                    <div class="list-group" id="searchResults">
+                        <!-- Search results will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal fade" id="settingsModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content bg-dark text-light">
+                <div class="modal-header">
+                    <h5 class="modal-title">Configuración Avanzada</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <ul class="nav nav-tabs mb-3" id="settingsTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="api-tab" data-bs-toggle="tab" data-bs-target="#api-tab-pane" type="button" role="tab">
+                                API & Conexión
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="balance-tab" data-bs-toggle="tab" data-bs-target="#balance-tab-pane" type="button" role="tab">
+                                Balance
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="notifications-tab" data-bs-toggle="tab" data-bs-target="#notifications-tab-pane" type="button" role="tab">
+                                Notificaciones
+                            </button>
+                        </li>
+                    </ul>
+                    <div class="tab-content" id="settingsTabsContent">
+                        <!-- API Settings Tab -->
+                        <div class="tab-pane fade show active" id="api-tab-pane" role="tabpanel" tabindex="0">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="card api-card h-100">
+                                        <div class="card-header">
+                                            <i class="fas fa-key me-2"></i> Claves API de Bitso
+                                        </div>
+                                        <div class="card-body">
+                                            <form id="apiSettingsForm">
+                                                <div class="mb-3">
+                                                    <label for="apiKeySettings" class="form-label">API Key</label>
+                                                    <div class="api-key-field">
+                                                        <input type="password" class="form-control" id="apiKeySettings" placeholder="Ingresa tu API Key">
+                                                        <button type="button" class="toggle-visibility">
+                                                            <i class="far fa-eye"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label for="apiSecretSettings" class="form-label">API Secret</label>
+                                                    <div class="api-key-field">
+                                                        <input type="password" class="form-control" id="apiSecretSettings" placeholder="Ingresa tu API Secret">
+                                                        <button type="button" class="toggle-visibility">
+                                                            <i class="far fa-eye"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                <div class="d-grid">
+                                                    <button type="submit" class="btn btn-primary">
+                                                        <i class="fas fa-save me-2"></i> Guardar Claves
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card api-card h-100">
+                                        <div class="card-header">
+                                            <i class="fas fa-toggle-on me-2"></i> Modo de Operación
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="mb-4">
+                                                <p class="mb-2">Modo actual:</p>
+                                                <div class="alert" id="modeStatusAlert">
+                                                    <span id="modeStatusText">{{ 'Simulación' if status.mode == 'Simulación' else 'Real' }}</span>
+                                                </div>
+                                            </div>
+                                            <div class="mb-2">
+                                                <div class="form-text mb-2">
+                                                    <i class="fas fa-info-circle me-1"></i> 
+                                                    El modo real necesita claves API válidas para operar.
+                                                </div>
+                                            </div>
+                                            <div class="d-grid mt-4">
+                                                <button type="button" id="toggleModeSettingsBtn" class="btn btn-outline-primary">
+                                                    <i class="fas fa-exchange-alt me-2"></i>
+                                                    <span>Cambiar modo</span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Balance Tab -->
+                        <div class="tab-pane fade" id="balance-tab-pane" role="tabpanel" tabindex="0">
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="card mb-3">
+                                        <div class="card-header d-flex justify-content-between align-items-center">
+                                            <span><i class="fas fa-wallet me-2"></i> Balance</span>
+                                            <button id="refreshBalanceBtn" class="btn btn-sm btn-outline-light">
+                                                <i class="fas fa-sync-alt"></i>
+                                            </button>
+                                        </div>
+                                        <div class="card-body">
+                                            <div id="balancesContainer">
+                                                <div class="d-flex justify-content-center py-4">
+                                                    <div class="spinner-border text-primary" role="status">
+                                                        <span class="visually-hidden">Cargando...</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Notifications Tab -->
+                        <div class="tab-pane fade" id="notifications-tab-pane" role="tabpanel" tabindex="0">
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="card api-card">
+                                        <div class="card-header">
+                                            <i class="fab fa-telegram me-2"></i> Configuración de Telegram
+                                        </div>
+                                        <div class="card-body">
+                                            <form id="telegramSettingsForm">
+                                                <div class="mb-3">
+                                                    <div class="form-check form-switch">
+                                                        <input class="form-check-input" type="checkbox" id="telegramEnabledSettings">
+                                                        <label class="form-check-label" for="telegramEnabledSettings">Habilitar notificaciones</label>
+                                                    </div>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label for="telegramTokenSettings" class="form-label">Token del Bot</label>
+                                                    <input type="text" class="form-control" id="telegramTokenSettings" placeholder="123456789:ABCDefGhIJKlmNoPQRsTUVwxyZ">
+                                                    <div class="form-text">
+                                                        <small>Obtén tu token creando un bot con @BotFather en Telegram</small>
+                                                    </div>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label for="telegramChatIdSettings" class="form-label">Chat ID</label>
+                                                    <input type="text" class="form-control" id="telegramChatIdSettings" placeholder="-100123456789">
+                                                    <div class="form-text">
+                                                        <small>ID del chat donde se enviarán las notificaciones</small>
+                                                    </div>
+                                                </div>
+                                                <div class="d-grid">
+                                                    <button type="submit" class="btn btn-primary">
+                                                        <i class="fab fa-telegram me-2"></i> Guardar Configuración
+                                                    </button>
+                                                </div>
+                                                <div class="mt-3 text-center">
+                                                    <a href="https://core.telegram.org/bots/tutorial" target="_blank" class="text-info">
+                                                        <i class="fas fa-question-circle me-1"></i> Cómo crear un bot en Telegram
+                                                    </a>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- ApexCharts -->
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.35.3/dist/apexcharts.min.js"></script>
+    <!-- Main JS -->
+    <script>
+        // DOM Elements
+        const tokenNameEl = document.getElementById('tokenName');
+        const currentPriceEl = document.getElementById('currentPrice');
+        const trendIndicatorEl = document.getElementById('trendIndicator');
+        const decisionTextEl = document.getElementById('decisionText');
+        const saldoTotalEl = document.getElementById('saldoTotal');
+        const saldoMonedasEl = document.getElementById('saldoMonedas');
+        const winsEl = document.getElementById('wins');
+        const lossesEl = document.getElementById('losses');
+        const nextOperationEl = document.getElementById('nextOperation');
+        const operationsTableEl = document.getElementById('operationsTable');
+        const configFormEl = document.getElementById('configForm');
+        const tokenSelectEl = document.getElementById('tokenSelect');
+        const limitInputEl = document.getElementById('limitInput');
+        const capitalInputEl = document.getElementById('capitalInput');
+        const loadingOverlayEl = document.getElementById('loadingOverlay');
+        const modeToggleEl = document.getElementById('modeToggle');
+        const searchBtnEl = document.getElementById('searchBtn');
+        const searchModalEl = new bootstrap.Modal(document.getElementById('searchModal'));
+        const searchInputEl = document.getElementById('searchInput');
+        const searchResultsEl = document.getElementById('searchResults');
+        const apiKeysFormEl = document.getElementById('apiKeysForm');
+        const telegramFormEl = document.getElementById('telegramForm');
+        const apiSettingsFormEl = document.getElementById('apiSettingsForm');
+        const telegramSettingsFormEl = document.getElementById('telegramSettingsForm');
+        const toggleModeBtn = document.getElementById('toggleModeBtn');
+        const toggleModeSettingsBtn = document.getElementById('toggleModeSettingsBtn');
+        const currentModeTextEl = document.getElementById('currentModeText');
+        const modeStatusTextEl = document.getElementById('modeStatusText');
+        const modeStatusAlertEl = document.getElementById('modeStatusAlert');
+        const telegramStatusEl = document.getElementById('telegramStatus');
+        const balanceContainerEl = document.getElementById('balancesContainer');
+        const refreshBalanceBtn = document.getElementById('refreshBalanceBtn');
+        const balanceModeEl = document.getElementById('balanceMode');
+        const botStatusBadgeEl = document.getElementById('botStatusBadge');
+        const toastContainerEl = document.getElementById('toastContainer');
+
+        // Chart Configuration
+        let chart;
+        
+        // Initialize Chart
+        function initChart() {
+            const options = {
+                series: [
+                    {
+                        name: 'Precio',
+                        type: 'candlestick',
+                        data: []
+                    }
+                ],
+                chart: {
+                    height: 400,
+                    type: 'candlestick',
+                    toolbar: {
+                        show: true,
+                        tools: {
+                            download: true,
+                            selection: true,
+                            zoom: true,
+                            zoomin: true,
+                            zoomout: true,
+                            pan: true
+                        }
+                    },
+                    animations: {
+                        enabled: false
+                    },
+                    background: '#2d3748'
+                },
+                plotOptions: {
+                    candlestick: {
+                        colors: {
+                            upward: '#38a169',
+                            downward: '#e53e3e'
+                        },
+                        wick: {
+                            useFillColor: true
+                        }
+                    }
+                },
+                xaxis: {
+                    type: 'datetime',
+                    labels: {
+                        style: {
+                            colors: '#edf2f7'
+                        }
+                    }
+                },
+                yaxis: {
+                    tooltip: {
+                        enabled: true
+                    },
+                    labels: {
+                        style: {
+                            colors: '#edf2f7'
+                        }
+                    }
+                },
+                grid: {
+                    borderColor: '#4a5568'
+                },
+                tooltip: {
+                    theme: 'dark'
+                },
+                annotations: {
+                    points: []
+                }
+            };
+
+            chart = new ApexCharts(document.getElementById('chartContainer'), options);
+            chart.render();
+        }
+
+        // Update Chart with New Data
+        function updateChart(chartData) {
+            if (!chartData || !chartData.prices || chartData.prices.length === 0) {
+                console.error('No chart data available');
+                return;
+            }
+
+            // Format the data for ApexCharts candlestick
+            const ohlcData = chartData.prices.map(item => ({
+                x: item[0],
+                y: [item[1], item[2], item[3], item[4]] // Open, High, Low, Close
+            }));
+
+            // Format EMA data
+            const emaData = chartData.ema20.map(item => ({
+                x: item[0],
+                y: item[1]
+            }));
+
+            // Format operations annotations
+            const annotations = chartData.operations.map(op => ({
+                x: op.timestamp,
+                y: op.price,
+                marker: {
+                    size: 6,
+                    fillColor: op.type === 'buy' ? '#38a169' : '#e53e3e',
+                    strokeColor: '#fff',
+                    radius: 2
+                },
+                label: {
+                    text: op.type === 'buy' ? 'Compra' : 'Venta',
+                    style: {
+                        background: op.type === 'buy' ? '#38a169' : '#e53e3e',
+                        color: '#fff'
+                    }
+                }
+            }));
+
+            // Update the chart with new data
+            chart.updateSeries([
+                {
+                    name: 'Precio',
+                    type: 'candlestick',
+                    data: ohlcData
+                },
+                {
+                    name: 'EMA 20',
+                    type: 'line',
+                    data: emaData
+                }
+            ]);
+
+            // Update annotations
+            chart.updateOptions({
+                annotations: {
+                    points: annotations
+                }
+            });
+        }
+
+
+        // Format operations table
+        function updateOperationsTable(operations) {
+            if (!operations || operations.length === 0) {
+                operationsTableEl.innerHTML = '<tr><td colspan="7" class="text-center">No hay operaciones</td></tr>';
+                document.getElementById('operationsCount').textContent = '0 operaciones';
+                return;
+            }
+
+            // Actualizar contador de operaciones
+            document.getElementById('operationsCount').textContent = `${operations.length} operaciones`;
+            
+            // Ordenar operaciones por fecha (más recientes primero)
+            const sortedOps = [...operations].sort((a, b) => {
+                return new Date(b.Date) - new Date(a.Date);
+            });
+            
+            const rows = sortedOps.map(op => {
+                // Determinar clase de operación para estilo
+                const opClass = op.Operation === 'Compra' ? 'text-success' : 'text-danger';
+                
+                // Formatear beneficio con estilo correcto
+                let profitHtml = '-';
+                if (typeof op.Profit === 'number') {
+                    const profitClass = op.Profit > 0 ? 'profit-positive' : 'profit-negative';
+                    profitHtml = `<span class="${profitClass}">$${op.Profit.toFixed(2)}</span>`;
+                }
+                
+                // Determinar estado de operación
+                let statusHtml = '';
+                if (op.is_backtesting) {
+                    statusHtml = '<span class="badge bg-secondary">Simulación</span>';
+                } else {
+                    statusHtml = '<span class="badge bg-success">Real</span>';
+                }
+                
+                return `
+                    <tr>
+                        <td>${op.Date}</td>
+                        <td>${op.Token}</td>
+                        <td class="${opClass}">
+                            <i class="fas fa-${op.Operation === 'Compra' ? 'arrow-circle-up' : 'arrow-circle-down'} me-1"></i>
+                            ${op.Operation}
+                        </td>
+                        <td>$${op.Price.toFixed(2)}</td>
+                        <td>${op.Quantity.toFixed(5)}</td>
+                        <td>${profitHtml}</td>
+                        <td>${statusHtml}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            operationsTableEl.innerHTML = rows;
+        }
+
+        // Update Status Information
+        function updateStatus(status) {
+            tokenNameEl.textContent = status.current_token;
+            currentPriceEl.textContent = status.current_price.toFixed(2);
+            
+            // Update trend indicator
+            let trendHTML = '';
+            if (status.trend === 'Alta') {
+                trendHTML = '<i class="fas fa-arrow-up"></i> Tendencia: Alta';
+                trendIndicatorEl.className = 'fs-5 trend-up';
+            } else if (status.trend === 'Baja') {
+                trendHTML = '<i class="fas fa-arrow-down"></i> Tendencia: Baja';
+                trendIndicatorEl.className = 'fs-5 trend-down';
+            } else {
+                trendHTML = '<i class="fas fa-minus"></i> Tendencia: Neutral';
+                trendIndicatorEl.className = 'fs-5 trend-neutral';
+            }
+            trendIndicatorEl.innerHTML = trendHTML;
+            
+            // Update decision text
+            decisionTextEl.textContent = status.decision;
+            
+            // Estilo del recuadro de decisión según el contenido
+            const decisionBox = document.getElementById('decisionBox');
+            if (status.decision.includes("Comprar")) {
+                decisionBox.className = 'decision-box decision-buy';
+            } else if (status.decision.includes("Mantener")) {
+                decisionBox.className = 'decision-box decision-hold';
+            } else if (status.decision.includes("Esperar")) {
+                decisionBox.className = 'decision-box decision-wait';
+            } else {
+                decisionBox.className = 'decision-box';
+            }
+            
+            // Update stats
+            saldoTotalEl.textContent = '$' + status.saldo_total.toFixed(2);
+            saldoMonedasEl.textContent = status.saldo_monedas.toFixed(5);
+            winsEl.textContent = status.wins;
+            lossesEl.textContent = status.losses;
+            
+            // Update next operation countdown
+            const nextOpTime = new Date(status.next_operation * 1000);
+            nextOperationEl.textContent = nextOpTime.toLocaleTimeString();
+            
+            // Update mode toggle and indicators
+            modeToggleEl.checked = status.mode === 'Real';
+            currentModeTextEl.textContent = status.mode === 'Real' ? 'Modo Real' : 'Modo Simulación';
+            modeStatusTextEl.textContent = status.mode;
+            balanceModeEl.textContent = status.mode;
+            
+            // Update mode alert style
+            if (status.mode === 'Real') {
+                modeStatusAlertEl.className = 'alert alert-success';
+            } else {
+                modeStatusAlertEl.className = 'alert alert-warning';
+            }
+            
+            // Update Telegram status
+            if (status.telegram_enabled) {
+                telegramStatusEl.className = 'text-success';
+                telegramStatusEl.innerHTML = '<i class="fab fa-telegram"></i> <span class="badge bg-success telegram-badge">Conectado</span>';
+            } else {
+                telegramStatusEl.className = 'text-muted';
+                telegramStatusEl.innerHTML = '<i class="fab fa-telegram"></i> <span class="badge bg-secondary telegram-badge">Desconectado</span>';
+            }
+        }
+
+        // Fetch and Update All Data
+        async function fetchAllData() {
+            try {
+                showLoading();
+                
+                // Fetch status data
+                const statusResponse = await fetch('/api/status');
+                const statusData = await statusResponse.json();
+                updateStatus(statusData);
+                
+                // Fetch chart data
+                const chartResponse = await fetch('/api/chart');
+                const chartData = await chartResponse.json();
+                updateChart(chartData);
+                
+                // Fetch operations data
+                const opsResponse = await fetch('/api/operations');
+                const opsData = await opsResponse.json();
+                updateOperationsTable(opsData);
+                
+                hideLoading();
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                hideLoading();
+                showToast('Error', 'Error al cargar datos', 'error');
+            }
+        }
+
+        // Apply Configuration
+        async function applyConfiguration(event) {
+            event.preventDefault();
+            
+            try {
+                showLoading();
+                
+                const config = {
+                    token: tokenSelectEl.value,
+                    limit: parseInt(limitInputEl.value),
+                    capital: parseFloat(capitalInputEl.value)
+                };
+                
+                const response = await fetch('/api/apply_config', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(config)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    updateStatus(data.status);
+                    updateChart(data.chart);
+                    updateOperationsTable(data.operations);
+                    showToast('Éxito', 'Configuración aplicada correctamente', 'success');
+                } else {
+                    showToast('Error', 'Error: ' + data.error, 'error');
+                }
+                
+                hideLoading();
+            } catch (error) {
+                console.error('Error applying configuration:', error);
+                hideLoading();
+                showToast('Error', 'Error al aplicar configuración', 'error');
+            }
+        }
+
+        // Toggle Trading Mode (Simulation/Real)
+        async function toggleMode() {
+            try {
+                showLoading();
+                
+                const response = await fetch('/api/toggle_mode');
+                const data = await response.json();
+                
+                if (data.success) {
+                    modeToggleEl.checked = data.mode === 'Real';
+                    showToast('Información', `Cambiado a modo ${data.mode}`, 'info');
+                }
+                
+                // Refresh all data
+                await fetchAllData();
+                
+                hideLoading();
+            } catch (error) {
+                console.error('Error toggling mode:', error);
+                hideLoading();
+                showToast('Error', 'Error al cambiar el modo', 'error');
+            }
+        }
+
+        // Search Tokens
+        async function searchTokens(term) {
+            try {
+                const response = await fetch(`/api/search_token?term=${term}`);
+                const tokens = await response.json();
+                
+                searchResultsEl.innerHTML = '';
+                
+                if (tokens.length === 0) {
+                    searchResultsEl.innerHTML = '<div class="list-group-item bg-dark text-light">No se encontraron resultados</div>';
+                    return;
+                }
+                
+                tokens.forEach(token => {
+                    const item = document.createElement('button');
+                    item.className = 'list-group-item list-group-item-action bg-dark text-light currency-item';
+                    item.textContent = token;
+                    item.addEventListener('click', () => {
+                        tokenSelectEl.value = token;
+                        searchModalEl.hide();
+                    });
+                    searchResultsEl.appendChild(item);
+                });
+            } catch (error) {
+                console.error('Error searching tokens:', error);
+                showToast('Error', 'Error al buscar tokens', 'error');
+            }
+        }
+
+        // Update API Keys
+        async function updateApiKeys(apiKey, apiSecret) {
+            try {
+                showLoading();
+                
+                const response = await fetch('/api/update_api_keys', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        api_key: apiKey,
+                        api_secret: apiSecret
+                    })
+                });
+                
+                const data = await response.json();
+                
+                hideLoading();
+                
+                if (data.success) {
+                    showToast('Éxito', 'Claves API actualizadas correctamente', 'success');
+                    return true;
+                } else {
+                    showToast('Error', 'Error al actualizar claves API: ' + data.error, 'error');
+                    return false;
+                }
+            } catch (error) {
+                console.error('Error updating API keys:', error);
+                hideLoading();
+                showToast('Error', 'Error al actualizar claves API', 'error');
+                return false;
+            }
+        }
+
+        // Update Telegram Configuration
+        async function updateTelegramConfig(enabled, token, chatId) {
+            try {
+                showLoading();
+                
+                const response = await fetch('/api/update_telegram_config', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        enabled: enabled,
+                        token: token,
+                        chat_id: chatId
+                    })
+                });
+                
+                const data = await response.json();
+                
+                hideLoading();
+                
+                if (data.success) {
+                    showToast('Éxito', 'Configuración de Telegram actualizada correctamente', 'success');
+                    // Update status to reflect new Telegram configuration
+                    await fetchAllData();
+                    return true;
+                } else {
+                    showToast('Error', 'Error al actualizar configuración de Telegram: ' + data.error, 'error');
+                    return false;
+                }
+            } catch (error) {
+                console.error('Error updating Telegram config:', error);
+                hideLoading();
+                showToast('Error', 'Error al actualizar configuración de Telegram', 'error');
+                return false;
+            }
+        }
+
+        // Get Telegram Configuration
+        async function getTelegramConfig() {
+            try {
+                const response = await fetch('/api/get_telegram_config');
+                const data = await response.json();
+                
+                // Update form fields
+                document.getElementById('telegramEnabled').checked = data.enabled;
+                document.getElementById('telegramToken').value = data.token;
+                document.getElementById('telegramChatId').value = data.chat_id;
+                
+                document.getElementById('telegramEnabledSettings').checked = data.enabled;
+                document.getElementById('telegramTokenSettings').value = data.token;
+                document.getElementById('telegramChatIdSettings').value = data.chat_id;
+                
+                return data;
+            } catch (error) {
+                console.error('Error fetching Telegram config:', error);
+                return {
+                    enabled: false,
+                    token: '',
+                    chat_id: ''
+                };
+            }
+        }
+
+        // Fetch Balances
+        async function fetchBalances() {
+            try {
+                balanceContainerEl.innerHTML = `
+                    <div class="d-flex justify-content-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Cargando...</span>
+                        </div>
+                    </div>
+                `;
+                
+                const response = await fetch('/api/get_balances');
+                const data = await response.json();
+                
+                if (data.simulation_mode) {
+                    // Simulation balances
+                    balanceContainerEl.innerHTML = `
+                        <div class="alert alert-warning">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Modo de simulación activo. Balance simulado:
+                        </div>
+                        <div class="d-flex justify-content-between mb-2 p-2 currency-item">
+                            <span><i class="fas fa-dollar-sign me-2"></i> Efectivo</span>
+                            <span class="fw-bold">$${data.simulation_balance.money.toFixed(2)}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2 p-2 currency-item">
+                            <span><i class="fas fa-coins me-2"></i> Monedas</span>
+                            <span class="fw-bold">${data.simulation_balance.coins.toFixed(5)}</span>
+                        </div>
+                        <div class="d-flex justify-content-between p-2 fw-bold border-top pt-3">
+                            <span>Total</span>
+                            <span>$${data.simulation_balance.total.toFixed(2)}</span>
+                        </div>
+                    `;
+                } else if (data.success) {
+                    // Real balances
+                    if (Object.keys(data.balances).length === 0) {
+                        balanceContainerEl.innerHTML = `
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                No hay balances disponibles.
+                            </div>
+                        `;
+                    } else {
+                        let balancesHTML = '';
+                        
+                        // Process all balances
+                        for (const [currency, balance] of Object.entries(data.balances)) {
+                            balancesHTML += `
+                                <div class="d-flex justify-content-between mb-2 p-2 currency-item">
+                                    <span>${currency}</span>
+                                    <span class="fw-bold">${balance.total}</span>
+                                </div>
+                            `;
+                        }
+                        
+                        balanceContainerEl.innerHTML = balancesHTML;
+                    }
+                } else {
+                    balanceContainerEl.innerHTML = `
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Error al obtener los balances: ${data.error}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error fetching balances:', error);
+                balanceContainerEl.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Error al obtener los balances: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        // Loading Helpers
+        function showLoading() {
+            loadingOverlayEl.classList.add('show');
+        }
+
+        function hideLoading() {
+            loadingOverlayEl.classList.remove('show');
+        }
+
+        // Format Time
+        function formatTimeRemaining(seconds) {
+            if (seconds <= 0) return '00:00:00';
+            
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            const secs = seconds % 60;
+            
+            return [hours, minutes, secs]
+                .map(v => v < 10 ? '0' + v : v)
+                .join(':');
+        }
+
+        // Toggle Password Visibility
+        function setupPasswordToggles() {
+            document.querySelectorAll('.toggle-visibility').forEach(button => {
+                button.addEventListener('click', function() {
+                    const input = this.parentElement.querySelector('input');
+                    const icon = this.querySelector('i');
+                    
+                    if (input.type === 'password') {
+                        input.type = 'text';
+                        icon.className = 'far fa-eye-slash';
+                    } else {
+                        input.type = 'password';
+                        icon.className = 'far fa-eye';
+                    }
+                });
+            });
+        }
+
+        // Automatic Updates
+        function setupAutomaticUpdates() {
+            // Update status every 30 seconds
+            setInterval(async () => {
+                const statusResponse = await fetch('/api/status');
+                const statusData = await statusResponse.json();
+                updateStatus(statusData);
+            }, 30000);
+            
+            // Full refresh every 5 minutes
+            setInterval(fetchAllData, 300000);
+        }
+
+        // Show toast notification
+        function showToast(title, message, type = 'info') {
+            const toastId = 'toast-' + Date.now();
+            const typeClass = type === 'error' ? 'danger' : type;
+            const icon = type === 'success' ? 'check-circle' :
+                       type === 'error' ? 'exclamation-triangle' :
+                       type === 'warning' ? 'exclamation-circle' : 'info-circle';
+            
+            const toastHTML = `
+                <div class="toast" id="${toastId}">
+                    <div class="toast-header">
+                        <i class="fas fa-${icon} me-2 text-${typeClass}"></i>
+                        <strong class="me-auto">${title}</strong>
+                        <button type="button" class="btn-close" aria-label="Close" onclick="document.getElementById('${toastId}').remove()"></button>
+                    </div>
+                    <div class="toast-body">
+                        ${message}
+                    </div>
+                </div>
+            `;
+            
+            toastContainerEl.insertAdjacentHTML('beforeend', toastHTML);
+            
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                const toastEl = document.getElementById(toastId);
+                if (toastEl) toastEl.remove();
+            }, 5000);
+        }
+
+        // Bot status control
+        async function checkBotStatus() {
+            try {
+                const response = await fetch('/api/status');
+                const data = await response.json();
+                
+                if (data.uptime > 0) {
+                    botStatusBadgeEl.className = 'bot-status-badge bot-status-running';
+                    botStatusBadgeEl.innerHTML = '<i class="fas fa-circle"></i> Bot Activo';
+                } else {
+                    botStatusBadgeEl.className = 'bot-status-badge bot-status-stopped';
+                    botStatusBadgeEl.innerHTML = '<i class="fas fa-circle"></i> Bot Detenido';
+                }
+            } catch (error) {
+                botStatusBadgeEl.className = 'bot-status-badge bot-status-stopped';
+                botStatusBadgeEl.innerHTML = '<i class="fas fa-circle"></i> Bot Detenido';
+            }
+        }
+
+        // Stop bot
+        async function stopBot() {
+            try {
+                if (confirm('¿Estás seguro de que deseas detener el bot? Esto podría interrumpir operaciones en curso.')) {
+                    showLoading();
+                    const response = await fetch('/api/stop_bot');
+                    const data = await response.json();
+                    hideLoading();
+                    
+                    if (data.success) {
+                        showToast('Éxito', 'Bot detenido correctamente', 'success');
+                        botStatusBadgeEl.className = 'bot-status-badge bot-status-stopped';
+                        botStatusBadgeEl.innerHTML = '<i class="fas fa-circle"></i> Bot Detenido';
+                    } else {
+                        showToast('Error', 'Error al detener el bot', 'error');
+                    }
+                }
+            } catch (error) {
+                hideLoading();
+                console.error('Error stopping bot:', error);
+                showToast('Error', 'Error al detener el bot', 'error');
+            }
+        }
+
+        // Start bot
+        async function startBot() {
+            try {
+                showLoading();
+                const response = await fetch('/api/restart_bot');
+                const data = await response.json();
+                hideLoading();
+                
+                if (data.success) {
+                    showToast('Éxito', 'Bot iniciado correctamente', 'success');
+                    botStatusBadgeEl.className = 'bot-status-badge bot-status-running';
+                    botStatusBadgeEl.innerHTML = '<i class="fas fa-circle"></i> Bot Activo';
+                } else {
+                    showToast('Error', 'Error al iniciar el bot: ' + (data.error || 'Error desconocido'), 'error');
+                }
+            } catch (error) {
+                hideLoading();
+                console.error('Error starting bot:', error);
+                showToast('Error', 'Error al iniciar el bot', 'error');
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize chart
+            initChart();
+            
+            // Fetch initial data
+            fetchAllData();
+            
+            // Get Telegram config
+            getTelegramConfig();
+            
+            // Set up password visibility toggles
+            setupPasswordToggles();
+            
+            // Check initial bot status
+            checkBotStatus();
+            
+            // Add bot control buttons
+            document.querySelector('.navbar-nav').insertAdjacentHTML('beforeend', `
+                <li class="nav-item ms-3">
+                    <button class="btn btn-sm btn-outline-danger" id="stopBotBtn" type="button">
+                        <i class="fas fa-stop-circle me-1"></i> Detener Bot
+                    </button>
+                </li>
+                <li class="nav-item ms-2">
+                    <button class="btn btn-sm btn-outline-success" id="startBotBtn" type="button">
+                        <i class="fas fa-play-circle me-1"></i> Iniciar Bot
+                    </button>
+                </li>
+            `);
+            
+            // Set up event listeners
+            configFormEl.addEventListener('submit', applyConfiguration);
+            modeToggleEl.addEventListener('change', toggleMode);
+            toggleModeBtn.addEventListener('click', toggleMode);
+            toggleModeSettingsBtn.addEventListener('click', toggleMode);
+            document.getElementById('stopBotBtn').addEventListener('click', stopBot);
+            document.getElementById('startBotBtn').addEventListener('click', startBot);
+            
+            // API Keys form submission
+            apiKeysFormEl.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const apiKey = document.getElementById('apiKey').value;
+                const apiSecret = document.getElementById('apiSecret').value;
+                updateApiKeys(apiKey, apiSecret);
+            });
+            
+            // API Settings form submission
+            apiSettingsFormEl.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const apiKey = document.getElementById('apiKeySettings').value;
+                const apiSecret = document.getElementById('apiSecretSettings').value;
+                updateApiKeys(apiKey, apiSecret);
+            });
+            
+            // Telegram form submission
+            telegramFormEl.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const enabled = document.getElementById('telegramEnabled').checked;
+                const token = document.getElementById('telegramToken').value;
+                const chatId = document.getElementById('telegramChatId').value;
+                updateTelegramConfig(enabled, token, chatId);
+            });
+            
+            // Telegram Settings form submission
+            telegramSettingsFormEl.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const enabled = document.getElementById('telegramEnabledSettings').checked;
+                const token = document.getElementById('telegramTokenSettings').value;
+                const chatId = document.getElementById('telegramChatIdSettings').value;
+                updateTelegramConfig(enabled, token, chatId);
+            });
+            
+            // Balance refresh button
+            refreshBalanceBtn.addEventListener('click', fetchBalances);
+            
+            // Search functionality
+            searchBtnEl.addEventListener('click', () => {
+                searchInputEl.value = '';
+                searchResultsEl.innerHTML = '';
+                searchModalEl.show();
+            });
+            
+            searchInputEl.addEventListener('input', (e) => {
+                if (e.target.value.length >= 1) {
+                    searchTokens(e.target.value);
+                } else {
+                    searchResultsEl.innerHTML = '';
+                }
+            });
+            
+            // Load balances when settings modal is shown
+            document.getElementById('settingsModal').addEventListener('shown.bs.modal', function () {
+                fetchBalances();
+            });
+            
+            // Set up automatic updates
+            setupAutomaticUpdates();
+            
+            // Operations table updates
+            document.getElementById('refreshOperationsBtn').addEventListener('click', function() {
+                fetch('/api/operations')
+                    .then(response => response.json())
+                    .then(operations => {
+                        updateOperationsTable(operations);
+                    })
+                    .catch(error => {
+                        console.error('Error al actualizar operaciones:', error);
+                    });
+            });
+            
+            // Add export operations functionality
+            document.getElementById('downloadOperationsBtn').addEventListener('click', function() {
+                window.location.href = '/api/export_operations';
+            });
+        });
+
+        // Actualizar visualización de la tabla de operaciones
+        function updateOperationsTable(operations) {
+            if (!operations || operations.length === 0) {
+                operationsTableEl.innerHTML = '<tr><td colspan="7" class="text-center">No hay operaciones</td></tr>';
+                document.getElementById('operationsCount').textContent = '0 operaciones';
+                return;
+            }
+
+            // Actualizar contador de operaciones
+            document.getElementById('operationsCount').textContent = `${operations.length} operaciones`;
+            
+            // Ordenar operaciones por fecha (más recientes primero)
+            const sortedOps = [...operations].sort((a, b) => {
+                return new Date(b.Date) - new Date(a.Date);
+            });
+            
+            const rows = sortedOps.map(op => {
+                // Determinar clase de operación para estilo
+                const opClass = op.Operation === 'Compra' ? 'text-success' : 'text-danger';
+                
+                // Formatear beneficio con estilo correcto
+                let profitHtml = '-';
+                if (typeof op.Profit === 'number') {
+                    const profitClass = op.Profit > 0 ? 'profit-positive' : 'profit-negative';
+                    profitHtml = `<span class="${profitClass}">$${op.Profit.toFixed(2)}</span>`;
+                }
+                
+                // Determinar estado de operación
+                let statusHtml = '';
+                if (op.is_backtesting) {
+                    statusHtml = '<span class="badge bg-secondary">Simulación</span>';
+                } else {
+                    statusHtml = '<span class="badge bg-success">Real</span>';
+                }
+                
+                return `
+                    <tr>
+                        <td>${op.Date}</td>
+                        <td>${op.Token}</td>
+                        <td class="${opClass}">
+                            <i class="fas fa-${op.Operation === 'Compra' ? 'arrow-circle-up' : 'arrow-circle-down'} me-1"></i>
+                            ${op.Operation}
+                        </td>
+                        <td>$${op.Price.toFixed(2)}</td>
+                        <td>${op.Quantity.toFixed(5)}</td>
+                        <td>${profitHtml}</td>
+                        <td>${statusHtml}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            operationsTableEl.innerHTML = rows;
+        }
+    </script>
+</body>
+</html>

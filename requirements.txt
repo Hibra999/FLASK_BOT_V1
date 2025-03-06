@@ -1,0 +1,8 @@
+flask
+ccxt
+pandas
+numpy
+python-telegram-bot
+pandas-ta
+matplotlib
+urllib3

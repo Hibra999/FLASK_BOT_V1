@@ -1,0 +1,115 @@
+{
+    "mode": "Simulaci\u00f3n",
+    "token": "BTC/USD",
+    "status": "venta",
+    "saldo_money": 1933.4573499999997,
+    "saldo_monedas": 0.0,
+    "last_buy_price": null,
+    "last_operation_time": 1741242829.049063,
+    "next_operation_time": 1741246429.049063,
+    "operations": [
+        {
+            "dt": "2025-02-28 19:00:00",
+            "Date": "2025-02-28 19:00",
+            "Token": "BTC/USD",
+            "Operation": "Compra",
+            "Price": 84488.0,
+            "Quantity": 0.02066,
+            "Profit": "",
+            "is_backtesting": true
+        },
+        {
+            "dt": "2025-03-01 04:00:00",
+            "Date": "2025-03-01 04:00",
+            "Token": "BTC/USD",
+            "Operation": "Venta",
+            "Price": 86313.0,
+            "Quantity": 0.02066,
+            "Profit": 37.7045,
+            "is_backtesting": true
+        },
+        {
+            "dt": "2025-03-01 05:00:00",
+            "Date": "2025-03-01 05:00",
+            "Token": "BTC/USD",
+            "Operation": "Compra",
+            "Price": 85600.0,
+            "Quantity": 0.02083,
+            "Profit": "",
+            "is_backtesting": true
+        },
+        {
+            "dt": "2025-03-02 16:00:00",
+            "Date": "2025-03-02 16:00",
+            "Token": "BTC/USD",
+            "Operation": "Venta",
+            "Price": 91306.0,
+            "Quantity": 0.02083,
+            "Profit": 118.85598,
+            "is_backtesting": true
+        },
+        {
+            "dt": "2025-03-03 04:00:00",
+            "Date": "2025-03-03 04:00",
+            "Token": "BTC/USD",
+            "Operation": "Compra",
+            "Price": 92722.0,
+            "Quantity": 0.0205,
+            "Profit": "",
+            "is_backtesting": true
+        },
+        {
+            "dt": "2025-03-04 19:00:00",
+            "Date": "2025-03-04 19:00",
+            "Token": "BTC/USD",
+            "Operation": "Venta",
+            "Price": 88257.0,
+            "Quantity": 0.0205,
+            "Profit": -91.5325,
+            "is_backtesting": true
+        },
+        {
+            "dt": "2025-03-04 20:00:00",
+            "Date": "2025-03-04 20:00",
+            "Token": "BTC/USD",
+            "Operation": "Compra",
+            "Price": 87102.0,
+            "Quantity": 0.02078,
+            "Profit": "",
+            "is_backtesting": true
+        },
+        {
+            "dt": "2025-03-05 10:00:00",
+            "Date": "2025-03-05 10:00",
+            "Token": "BTC/USD",
+            "Operation": "Venta",
+            "Price": 89588.0,
+            "Quantity": 0.02078,
+            "Profit": 51.65908,
+            "is_backtesting": true
+        },
+        {
+            "dt": "2025-03-05 13:00:00",
+            "Date": "2025-03-05 13:00",
+            "Token": "BTC/USD",
+            "Operation": "Compra",
+            "Price": 89410.0,
+            "Quantity": 0.02081,
+            "Profit": "",
+            "is_backtesting": true
+        },
+        {
+            "dt": "2025-03-06 02:00:00",
+            "Date": "2025-03-06 02:00",
+            "Token": "BTC/USD",
+            "Operation": "Venta",
+            "Price": 91972.0,
+            "Quantity": 0.02081,
+            "Profit": 53.31522,
+            "is_backtesting": true
+        }
+    ],
+    "wins": 6,
+    "losses": 2,
+    "draws": 1
+}
